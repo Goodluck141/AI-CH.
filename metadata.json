@@ -1,0 +1,6 @@
+{
+  "name": "AI Readiness Index",
+  "description": "Benchmark your AI adoption against the world's top practitioners across 12 professional roles with personalized gap analysis and recommendations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

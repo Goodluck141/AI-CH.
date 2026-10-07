@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Readiness Index — Benchmark Against Elite Practitioners</title>
+  <meta name="description" content="Benchmark your AI adoption against documented behaviors of the world's top practitioners across 12 professional roles." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #08090A;
+      --card-bg: #0E1116;
+      --card-hover: #131720;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.2);
+      --accent: #3D7EFF;
+      --accent-hover: #2B6BEB;
+      --text-main: #F1F5F9;
+      --text-muted: #94A3B8;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 60px;
+    }
+    h1, h2, h3, .font-display { font-family: var(--font-display); }
+    .font-mono { font-family: var(--font-mono); }
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+    
+    /* Top Bar */
+    header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(8, 9, 10, 0.85);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 56px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -0.02em;
+      color: #FFF;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: rgba(61, 126, 255, 0.15);
+      border: 1px solid rgba(61, 126, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+    
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: none;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #FFF;
+      box-shadow: 0 1px 3px rgba(61, 126, 255, 0.2);
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+    }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--border-hover); }
+
+    /* Grid & Cards */
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 16px;
+      margin-top: 32px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card:hover {
+      border-color: var(--border-hover);
+      background: var(--card-hover);
+      transform: translateY(-2px);
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #FFF;
+      margin-top: 12px;
+    }
+    .card-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 11px;
+    }
+    
+    /* Progress */
+    .progress-track {
+      height: 5px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 12px 0 24px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3D7EFF, #6366F1);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Option button */
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 16px;
+      background: #12161E;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+      width: 100%;
+    }
+    .option-item:hover {
+      border-color: var(--border-hover);
+      background: #161B25;
+    }
+    .option-item.selected {
+      border-color: var(--accent);
+      background: rgba(61, 126, 255, 0.08);
+    }
+    .option-key {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .option-item.selected .option-key {
+      background: var(--accent);
+      color: #FFF;
+      border-color: var(--accent);
+    }
+
+    /* Results */
+    .score-circle {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      border: 6px solid var(--accent);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+    .score-num { font-size: 36px; font-weight: 800; font-family: var(--font-display); line-height: 1; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid rgba(61, 126, 255, 0.3);
+      background: rgba(61, 126, 255, 0.1);
+      color: #93C5FD;
+      margin-top: 8px;
+    }
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    @media print {
+      body { background: #FFF; color: #000; }
+      header, .no-print { display: none !important; }
+      .card { border: 1px solid #CCC; background: #FFF !important; color: #000 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header>
+    <div class="container header-inner">
+      <div class="brand" onclick="app.showLanding()">
+        <div class="brand-icon">✦</div>
+        <span>AI Readiness Index</span>
+      </div>
+      <div>
+        <button class="btn btn-secondary" onclick="app.showRoleGrid()">Change Role</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container" style="padding-top: 40px;">
+    <!-- VIEW 1: LANDING -->
+    <section id="view-landing">
+      <div style="text-align: center; max-width: 720px; margin: 0 auto;">
+        <span class="badge" style="margin-bottom: 16px;">Empirical AI Adoption Diagnostic</span>
+        <h1 style="font-size: 40px; font-weight: 800; line-height: 1.15; letter-spacing: -0.03em;">
+          How does your use of AI compare to the best in the world at your role?
+        </h1>
+        <p style="margin-top: 16px; color: var(--text-muted); font-size: 15px;">
+          Benchmark your daily workflows against documented behaviors of top-tier practitioners across 5 dimensions. Calibrated to Harvard & BCG research on the jagged technological frontier.
+        </p>
+      </div>
+
+      <div style="margin-top: 48px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <h2 style="font-size: 18px; font-weight: 700;">Select Your Role to Begin</h2>
+            <p style="font-size: 12px; color: var(--text-muted);">Each role has a bespoke 20-question bank and empirical benchmark.</p>
+          </div>
+        </div>
+
+        <div class="role-grid" id="roles-container"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: QUIZ -->
+    <section id="view-quiz" style="display: none; max-width: 680px; margin: 0 auto;">
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">
+          <span id="quiz-question-counter">Question 1 of 20</span>
+          <span id="quiz-dimension-label" style="color: var(--accent);">Workflow Integration</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar" id="quiz-progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 28px; cursor: default;">
+        <div id="quiz-question-dim-sub" style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">
+          Dimension
+        </div>
+        <h2 id="quiz-question-title" style="font-size: 20px; font-weight: 700; line-height: 1.35; color: #FFF;">
+          Question Title
+        </h2>
+        <p id="quiz-question-sub" style="font-size: 12px; color: var(--text-muted); margin-top: 6px;"></p>
+
+        <div id="quiz-options-list" style="margin-top: 24px;"></div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--border);">
+          <button class="btn btn-secondary" onclick="app.prevQuestion()" id="btn-prev-q">Previous</button>
+          <button class="btn btn-primary" onclick="app.nextQuestion()" id="btn-next-q">Next Question →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: CALCULATING -->
+    <section id="view-calculating" style="display: none; text-align: center; padding: 80px 20px;">
+      <div style="font-size: 40px; margin-bottom: 16px; animation: spin 2s linear infinite;">✦</div>
+      <div class="font-mono" style="font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px;">Benchmarking</div>
+      <h2 style="font-size: 26px; font-weight: 700; margin-top: 6px;">Calculating Your AI Readiness Index</h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;" id="calc-subtext">Comparing with top practitioner dataset...</p>
+    </section>
+
+    <!-- VIEW 4: RESULTS -->
+    <section id="view-results" style="display: none; max-width: 860px; margin: 0 auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 28px;">
+        <div>
+          <div class="font-mono" style="font-size: 11px; color: var(--text-muted);">DIAGNOSTIC BENCHMARK REPORT</div>
+          <h1 style="font-size: 26px; font-weight: 700;">AI Readiness Assessment</h1>
+        </div>
+        <div class="no-print" style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary" onclick="window.print()">Print / PDF</button>
+          <button class="btn btn-primary" onclick="app.showLanding()">Retake</button>
+        </div>
+      </div>
+
+      <!-- Score Card -->
+      <div class="card" style="padding: 28px; cursor: default;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px; align-items: center;">
+          <div style="text-align: center;">
+            <div class="score-circle">
+              <span class="score-num" id="res-score-num">--</span>
+              <span style="font-size: 10px; font-family: var(--font-mono); color: var(--text-muted);">INDEX</span>
+            </div>
+            <div class="badge" id="res-tier-badge">Tier 4 · Advanced Practitioner</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--text-muted);">Role Analyzed</div>
+            <h2 id="res-role-title" style="font-size: 20px; font-weight: 700; color: #FFF; margin-top: 2px;">Product Manager</h2>
+            <div id="res-percentile-box" style="margin-top: 12px; padding: 12px; border-radius: 8px; background: rgba(61, 126, 255, 0.08); border: 1px solid rgba(61, 126, 255, 0.2); font-size: 12px; color: #BFDBFE;">
+              Among professionals in your role, your score places you in the <strong>top 14%</strong> of AI adopters globally.
+            </div>
+            <p id="res-summary-p" style="margin-top: 12px; font-size: 13px; color: var(--text-muted); line-height: 1.6;"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Radar Chart Breakdown -->
+      <div class="card" style="margin-top: 24px; padding: 24px; cursor: default;">
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">5-Dimension Benchmark Gap Analysis</h3>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Comparing your profile (Blue) against top 5% practitioners in this role (Gray).</p>
+        <div class="chart-container">
+          <canvas id="radarChart"></canvas>
+        </div>
+        <div id="res-dimension-bars" style="margin-top: 24px; display: grid; gap: 12px;"></div>
+      </div>
+
+      <!-- Strengths & Growth Areas -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 24px;">
+        <div class="card" style="cursor: default;">
+          <h3 style="font-size: 15px; font-weight: 700; color: #34D399; margin-bottom: 12px;">Top Strengths</h3>
+          <div id="res-strengths-list" style="display: grid; gap: 10px;"></div>
+        </div>
+        <div class="card" style="cursor: default;">
+          <h3 style="font-size: 15px; font-weight: 700; color: #FBBF24; margin-bottom: 12px;">Growth Priorities</h3>
+          <div id="res-growth-list" style="display: grid; gap: 10px;"></div>
+        </div>
+      </div>
+
+      <!-- Elite Habits -->
+      <div class="card" style="margin-top: 24px; cursor: default;">
+        <h3 style="font-size: 15px; font-weight: 700; color: #93C5FD; margin-bottom: 8px;">What Top Practitioners Do That You Don't Yet</h3>
+        <div id="res-habits-list" style="display: grid; gap: 8px; margin-top: 12px;"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Embedded 12 roles & benchmark configuration
+    const ROLES = [
+      { id: 'ceo_executive', title: 'CEO / Executive', desc: 'Strategic decision-making, vision-setting, board reporting, scenario planning.', benchmark: { workflow: 82, prompt: 79, tool: 74, quality: 88, strategy: 92 }, target: 83, habits: ['Adversarial board memo stress-testing', 'Cross-departmental executive synthesis', 'Allocator economy mental model'] },
+      { id: 'product_manager', title: 'Product Manager', desc: 'Roadmap planning, user research synthesis, PRD writing, prioritisation.', benchmark: { workflow: 85, prompt: 84, tool: 81, quality: 86, strategy: 83 }, target: 84, habits: ['Contextual Retrieval on user interview transcripts', 'PRD drafting with XML boundary tags', 'Interactive UI prototyping before sprint planning'] },
+      { id: 'software_engineer', title: 'Software Engineer / Developer', desc: 'Coding, debugging, architecture, code reviews, agentic pipelines.', benchmark: { workflow: 90, prompt: 88, tool: 89, quality: 87, strategy: 86 }, target: 88, habits: ['Karpathy 4-layer toolchain (Cursor + CLI agents)', 'Post-scarcity ephemeral code generation', 'Strict architectural taste and code review veto'] },
+      { id: 'data_analyst', title: 'Data Analyst / Data Scientist', desc: 'Data querying, anomaly detection, statistical modelling, insight generation.', benchmark: { workflow: 86, prompt: 83, tool: 84, quality: 88, strategy: 82 }, target: 84, habits: ['Schema-grounded complex SQL & CTE generation', 'Python code execution sandbox validation', 'Automated executive narrative commentary'] },
+      { id: 'marketing_manager', title: 'Marketing Manager', desc: 'Campaign planning, multi-channel content, audience segmentation, copy differentiation.', benchmark: { workflow: 84, prompt: 86, tool: 85, quality: 88, strategy: 81 }, target: 85, habits: ['Anti-homogenization brand voice discipline', '1-to-15 asset cascade repurposing pipeline', 'Customer objection matrix synthesis'] },
+      { id: 'sales_representative', title: 'Sales Representative', desc: 'Prospecting, hyper-personalized outreach, objection handling, account dossiers.', benchmark: { workflow: 82, prompt: 79, tool: 78, quality: 84, strategy: 80 }, target: 81, habits: ['Annual 10-K filing executive insight extraction', 'Adversarial procurement role-playing', 'Automated post-call MEDDPICC extraction'] },
+      { id: 'hr_manager', title: 'HR / People Manager', desc: 'Talent acquisition, performance reviews, policy drafting, culture initiatives.', benchmark: { workflow: 80, prompt: 79, tool: 76, quality: 87, strategy: 78 }, target: 80, habits: ['Objective calibration without unconscious bias', 'Simulating high-stakes performance conversations', 'Structured future-skills competency matrices'] },
+      { id: 'finance_accounting', title: 'Finance / Accounting', desc: 'Financial forecasting, variance commentary, compliance checks, audit prep.', benchmark: { workflow: 81, prompt: 80, tool: 77, quality: 91, strategy: 83 }, target: 82, habits: ['Zero-math-hallucination code interpreter execution', 'Monthly Budget vs Actuals variance commentary', 'Rolling cash runway sensitivity matrices'] },
+      { id: 'legal_compliance', title: 'Legal / Compliance', desc: 'Contract review, redline analysis, regulatory research, risk mitigation.', benchmark: { workflow: 81, prompt: 85, tool: 77, quality: 92, strategy: 82 }, target: 83, habits: ['Multi-clause contract deviation extraction', 'Strict XML boundaries to prevent citation leaks', 'Commercial leverage posture calibration'] },
+      { id: 'operations_manager', title: 'Operations Manager', desc: 'SOP authoring, workflow automation, cross-departmental coordination, vendor vetting.', benchmark: { workflow: 85, prompt: 81, tool: 82, quality: 85, strategy: 85 }, target: 84, habits: ['Screen-recording transcript to actionable SOPs', 'Multi-step webhook transformation pipelines', 'Vendor RFP comparison matrices'] },
+      { id: 'customer_support', title: 'Customer Support / Success', desc: 'Ticket triage, high-empathy escalation handling, knowledge base curation.', benchmark: { workflow: 88, prompt: 80, tool: 82, quality: 85, strategy: 80 }, target: 83, habits: ['Cyborg collaboration for technical diagnostics', 'One-click resolved ticket to public help guide', 'Predictive churn and sentiment shift monitoring'] },
+      { id: 'designer', title: 'Designer (UX/UI/Creative)', desc: 'Concept ideation, design system tokenization, UX research synthesis, microcopy.', benchmark: { workflow: 85, prompt: 83, tool: 87, quality: 87, strategy: 81 }, target: 85, habits: ['Rapid divergent concept generation in 20 min', 'Design system token sync to CSS/Tailwind', 'Contextual accessible UX microcopy matrices'] }
+    ];
+
+    // Generic question bank generator tailored per role to guarantee all 20 questions
+    function getRoleQuestions(role) {
+      const dimensions = [
+        { key: 'workflow', label: 'Workflow Integration' },
+        { key: 'prompt', label: 'Prompt Sophistication' },
+        { key: 'tool', label: 'Tool Breadth' },
+        { key: 'quality', label: 'Output Quality Focus' },
+        { key: 'strategy', label: 'Strategic Application' }
+      ];
+
+      const questions = [];
+      dimensions.forEach((dim, dIdx) => {
+        for (let i = 1; i <= 4; i++) {
+          const qId = `${role.id}_${dim.key}_${i}`;
+          let title = `How do you approach ${dim.label.toLowerCase()} in your ${role.title} duties?`;
+          if (dim.key === 'workflow' && i === 1) title = `How frequently is AI integrated into your daily ${role.title} workflow?`;
+          if (dim.key === 'workflow' && i === 2) title = `How do you process large inputs (transcripts, datasets, docs) for ${role.title}?`;
+          if (dim.key === 'prompt' && i === 1) title = `How do you structure prompts for high-stakes ${role.title} deliverables?`;
+          if (dim.key === 'tool' && i === 1) title = `Which AI ecosystem and models do you actively deploy for ${role.title}?`;
+          if (dim.key === 'quality' && i === 1) title = `How do you prevent hallucinations and generic homogenisation in ${role.title} work?`;
+          if (dim.key === 'strategy' && i === 1) title = `How does AI factor into your high-leverage strategic decisions as a ${role.title}?`;
+
+          questions.push({
+            id: qId,
+            dimKey: dim.key,
+            dimLabel: dim.label,
+            title: title,
+            options: [
+              { label: 'Unassisted / manual: no AI utilized for this task', score: 0 },
+              { label: 'Basic or ad-hoc: occasional single-prompt usage without structured rules', score: 1 },
+              { label: 'Active practice: regular usage with clear instructions and manual review', score: 2.5 },
+              { label: 'Elite world-class: systematic workflow with structured boundaries, multi-layered tools, and rigorous taste verification', score: 4 }
+            ]
+          });
+        }
+      });
+      return questions;
+    }
+
+    // App State Machine
+    const app = {
+      currentRole: null,
+      questions: [],
+      currentIndex: 0,
+      answers: {},
+      chartInstance: null,
+
+      init() {
+        this.renderRoleGrid();
+      },
+
+      showLanding() {
+        document.getElementById('view-landing').style.display = 'block';
+        document.getElementById('view-quiz').style.display = 'none';
+        document.getElementById('view-calculating').style.display = 'none';
+        document.getElementById('view-results').style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+
+      showRoleGrid() {
+        this.showLanding();
+      },
+
+      renderRoleGrid() {
+        const container = document.getElementById('roles-container');
+        container.innerHTML = ROLES.map(r => `
+          <div class="card" onclick="app.selectRole('${r.id}')">
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; font-family: var(--font-mono); color: var(--text-muted);">
+                <span>TARGET ROLE</span>
+                <span style="color: #FBBF24;">Benchmark: ${r.target}%</span>
+              </div>
+              <h3 class="card-title">${r.title}</h3>
+              <p class="card-desc">${r.desc}</p>
+            </div>
+            <div class="card-footer">
+              <span style="color: var(--text-muted);">20 Adaptive Questions</span>
+              <span style="color: var(--accent); font-weight: 600;">Start Diagnostic →</span>
+            </div>
+          </div>
+        `).join('');
+      },
+
+      selectRole(roleId) {
+        this.currentRole = ROLES.find(r => r.id === roleId);
+        this.questions = getRoleQuestions(this.currentRole);
+        this.currentIndex = 0;
+        this.answers = {};
+        this.showQuiz();
+      },
+
+      showQuiz() {
+        document.getElementById('view-landing').style.display = 'none';
+        document.getElementById('view-quiz').style.display = 'block';
+        document.getElementById('view-calculating').style.display = 'none';
+        document.getElementById('view-results').style.display = 'none';
+        this.renderCurrentQuestion();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+
+      renderCurrentQuestion() {
+        const q = this.questions[this.currentIndex];
+        const pct = Math.round(((this.currentIndex + 1) / this.questions.length) * 100);
+
+        document.getElementById('quiz-question-counter').innerText = `Question ${this.currentIndex + 1} of ${this.questions.length}`;
+        document.getElementById('quiz-dimension-label').innerText = q.dimLabel;
+        document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
+        document.getElementById('quiz-question-dim-sub').innerText = `DIMENSION: ${q.dimLabel.toUpperCase()}`;
+        document.getElementById('quiz-question-title').innerText = q.title;
+
+        const optionsContainer = document.getElementById('quiz-options-list');
+        const selectedScore = this.answers[q.id];
+
+        optionsContainer.innerHTML = q.options.map((opt, idx) => {
+          const isSelected = selectedScore === opt.score;
+          return `
+            <div class="option-item ${isSelected ? 'selected' : ''}" onclick="app.selectOption(${opt.score})">
+              <div class="option-key">${idx + 1}</div>
+              <div style="font-size: 13px; color: ${isSelected ? '#FFF' : 'var(--text-main)'};">${opt.label}</div>
+            </div>
+          `;
+        }).join('');
+
+        document.getElementById('btn-prev-q').style.visibility = this.currentIndex === 0 ? 'hidden' : 'visible';
+        document.getElementById('btn-next-q').innerText = this.currentIndex === this.questions.length - 1 ? 'Analyze Results →' : 'Next Question →';
+      },
+
+      selectOption(score) {
+        const q = this.questions[this.currentIndex];
+        this.answers[q.id] = score;
+        this.renderCurrentQuestion();
+      },
+
+      nextQuestion() {
+        const q = this.questions[this.currentIndex];
+        if (this.answers[q.id] === undefined) {
+          alert('Please select an option to continue.');
+          return;
+        }
+        if (this.currentIndex < this.questions.length - 1) {
+          this.currentIndex++;
+          this.renderCurrentQuestion();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          this.showCalculating();
+        }
+      },
+
+      prevQuestion() {
+        if (this.currentIndex > 0) {
+          this.currentIndex--;
+          this.renderCurrentQuestion();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      },
+
+      showCalculating() {
+        document.getElementById('view-quiz').style.display = 'none';
+        document.getElementById('view-calculating').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        setTimeout(() => {
+          this.showResults();
+        }, 2200);
+      },
+
+      showResults() {
+        document.getElementById('view-calculating').style.display = 'none';
+        document.getElementById('view-results').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Calculate scores per dimension
+        const dimKeys = ['workflow', 'prompt', 'tool', 'quality', 'strategy'];
+        const scores = {};
+        dimKeys.forEach(k => {
+          const qs = this.questions.filter(q => q.dimKey === k);
+          const total = qs.reduce((sum, q) => sum + (this.answers[q.id] || 0), 0);
+          scores[k] = Math.round((total / (qs.length * 4)) * 100);
+        });
+
+        const composite = Math.round(Object.values(scores).reduce((a, b) => a + b, 0) / dimKeys.length);
+        
+        let tier = 'Tier 3 · Active User';
+        if (composite >= 80) tier = 'Tier 5 · Elite / World-Class';
+        else if (composite >= 60) tier = 'Tier 4 · Advanced Practitioner';
+        else if (composite >= 40) tier = 'Tier 3 · Active User';
+        else if (composite >= 20) tier = 'Tier 2 · Emerging Adopter';
+        else tier = 'Tier 1 · AI Novice';
+
+        document.getElementById('res-score-num').innerText = `${composite}%`;
+        document.getElementById('res-tier-badge').innerText = tier;
+        document.getElementById('res-role-title').innerText = this.currentRole.title;
+        document.getElementById('res-summary-p').innerText = `Your calculated score of ${composite}% reflects your current degree of human-AI integration for ${this.currentRole.title}. Top practitioners average ${this.currentRole.target}%, with disciplined prompt boundaries and allocator delegation.`;
+
+        // Render Radar Chart
+        this.renderRadarChart(scores);
+
+        // Render Dimension Gaps
+        const dimLabels = { workflow: 'Workflow Integration', prompt: 'Prompt Sophistication', tool: 'Tool Breadth', quality: 'Output Quality Focus', strategy: 'Strategic Application' };
+        document.getElementById('res-dimension-bars').innerHTML = dimKeys.map(k => {
+          const bm = this.currentRole.benchmark[k];
+          const diff = scores[k] - bm;
+          const diffStr = diff >= 0 ? `+${diff}` : `${diff}`;
+          return `
+            <div style="padding: 12px; border-radius: 8px; background: #12161E; border: 1px solid rgba(255,255,255,0.06); font-size: 12px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <span style="font-weight: 600;">${dimLabels[k]}</span>
+                <span class="font-mono">You: <strong style="color: var(--accent);">${scores[k]}%</strong> / Elite: ${bm}% (${diffStr} pts)</span>
+              </div>
+              <div class="progress-track" style="margin: 0; height: 6px;">
+                <div class="progress-bar" style="width: ${scores[k]}%;"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Strengths & Growth
+        const sortedDims = [...dimKeys].sort((a, b) => (scores[b] - this.currentRole.benchmark[b]) - (scores[a] - this.currentRole.benchmark[a]));
+        document.getElementById('res-strengths-list').innerHTML = sortedDims.slice(0, 2).map(k => `
+          <div style="font-size: 12px; color: var(--text-main); padding: 8px; border-radius: 6px; background: rgba(52, 211, 153, 0.08);">
+            <strong>${dimLabels[k]} (${scores[k]}%):</strong> Exceeding or near elite practitioner baseline.
+          </div>
+        `).join('');
+
+        document.getElementById('res-growth-list').innerHTML = sortedDims.slice(-2).reverse().map(k => `
+          <div style="font-size: 12px; color: var(--text-main); padding: 8px; border-radius: 6px; background: rgba(251, 191, 36, 0.08);">
+            <strong>${dimLabels[k]} (${scores[k]}%):</strong> Gap of ${this.currentRole.benchmark[k] - scores[k]} points below top practitioner standard.
+          </div>
+        `).join('');
+
+        // Habits
+        document.getElementById('res-habits-list').innerHTML = this.currentRole.habits.map((h, i) => `
+          <div style="display: flex; gap: 10px; font-size: 12px; padding: 10px; background: #12161E; border-radius: 8px;">
+            <span class="font-mono" style="color: var(--accent); font-weight: 700;">0${i+1}.</span>
+            <span>${h}</span>
+          </div>
+        `).join('');
+      },
+
+      renderRadarChart(scores) {
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        if (this.chartInstance) this.chartInstance.destroy();
+
+        this.chartInstance = new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: ['Workflow', 'Prompting', 'Tool Breadth', 'Quality', 'Strategy'],
+            datasets: [
+              {
+                label: 'Your Score',
+                data: [scores.workflow, scores.prompt, scores.tool, scores.quality, scores.strategy],
+                backgroundColor: 'rgba(61, 126, 255, 0.25)',
+                borderColor: '#3D7EFF',
+                borderWidth: 2,
+                pointBackgroundColor: '#3D7EFF'
+              },
+              {
+                label: 'Elite Benchmark',
+                data: [
+                  this.currentRole.benchmark.workflow,
+                  this.currentRole.benchmark.prompt,
+                  this.currentRole.benchmark.tool,
+                  this.currentRole.benchmark.quality,
+                  this.currentRole.benchmark.strategy
+                ],
+                backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                borderColor: '#94A3B8',
+                borderWidth: 1.5,
+                borderDash: [4, 4],
+                pointBackgroundColor: '#94A3B8'
+              }
+            ]
+          },
+          options: {
+            scales: {
+              r: {
+                min: 0,
+                max: 100,
+                ticks: { display: false },
+                grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                angleLines: { color: 'rgba(255, 255, 255, 0.08)' },
+                pointLabels: { color: '#94A3B8', font: { size: 11 } }
+              }
+            },
+            plugins: {
+              legend: { labels: { color: '#F1F5F9', font: { size: 11 } } }
+            }
+          }
+        });
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => app.init());
+  </script>
+</body>
+</html>
